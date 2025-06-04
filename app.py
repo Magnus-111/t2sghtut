@@ -14,6 +14,7 @@ beers = [
 @app.route('/', methods=['GET', 'POST'])
 def home():
     recommended = None
+    qrcode_url = None
     if request.method == 'POST':
         try:
             user_ibu = int(request.form.get('ibu', 0))
@@ -21,6 +22,11 @@ def home():
             recommended = min(beers, key=lambda b: abs(b['ibu'] - user_ibu))
         except (ValueError, TypeError):
             recommended = None
+    if recommended:
+        # Link do Google Images dla wybranego piwa
+        google_url = f"https://www.google.com/search?tbm=isch&q={recommended['name']}+beer"
+        # Adres Twojej funkcji generującej QR Code (przykład, podmień na swój endpoint)
+        qrcode_url = f"https://qrcode-fn-cezaryj.azurewebsites.net/api/qrcode?url={google_url}"
     return render_template_string('''
         <h1>Wybierz preferowaną wartość IBU</h1>
         <p><strong>Legenda IBU:</strong> <br>
@@ -35,8 +41,13 @@ def home():
         </form>
         {% if recommended %}
             <h2>Rekomendowane piwo: {{ recommended.name }} (IBU: {{ recommended.ibu }})</h2>
+            <p>Otwórz w Google Images: <a href="https://www.google.com/search?tbm=isch&q={{ recommended.name }}+beer" target="_blank">Zobacz zdjęcia</a></p>
+            {% if qrcode_url %}
+                <p>QR Code do wyszukiwarki Google Images:</p>
+                <img src="{{ qrcode_url }}" alt="QR Code">
+            {% endif %}
         {% endif %}
-    ''', recommended=recommended)
+    ''', recommended=recommended, qrcode_url=qrcode_url)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
