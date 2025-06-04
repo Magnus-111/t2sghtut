@@ -1,4 +1,6 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, send_file, url_for
+import qrcode
+import io
 
 app = Flask(__name__)
 
@@ -20,13 +22,12 @@ def home():
             user_ibu = int(request.form.get('ibu', 0))
             # Znajdź piwo o najbliższym IBU
             recommended = min(beers, key=lambda b: abs(b['ibu'] - user_ibu))
+            if recommended:
+                google_url = f"https://www.google.com/search?tbm=isch&q={recommended['name']}+beer"
+                # Generowanie lokalnego linku do QR code
+                qrcode_url = url_for('beer_qrcode', beer_name=recommended['name'])
         except (ValueError, TypeError):
             recommended = None
-    if recommended:
-        # Link do Google Images dla wybranego piwa
-        google_url = f"https://www.google.com/search?tbm=isch&q={recommended['name']}+beer"
-        # Adres Twojej funkcji generującej QR Code (przykład, podmień na swój endpoint)
-        qrcode_url = f"https://qrcode-fn-cezaryj.azurewebsites.net/api/qrcode?url={google_url}"
     return render_template_string('''
         <h1>Wybierz preferowaną wartość IBU</h1>
         <p><strong>Legenda IBU:</strong> <br>
@@ -48,6 +49,15 @@ def home():
             {% endif %}
         {% endif %}
     ''', recommended=recommended, qrcode_url=qrcode_url)
+
+@app.route('/beer_qrcode/<beer_name>')
+def beer_qrcode(beer_name):
+    google_url = f"https://www.google.com/search?tbm=isch&q={beer_name}+beer"
+    img = qrcode.make(google_url)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return send_file(buf, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
