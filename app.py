@@ -23,6 +23,11 @@ def home():
             recommended = None
     return render_template_string('''
         <h1>Wybierz preferowaną wartość IBU</h1>
+        <p><strong>Legenda IBU:</strong> <br>
+        0-20: bardzo niska goryczka<br>
+        21-40: umiarkowana goryczka<br>
+        41-60: wyraźna goryczka<br>
+        61+: bardzo wysoka goryczka</p>
         <form method="post">
             <label for="ibu">IBU (goryczka):</label>
             <input type="number" id="ibu" name="ibu" min="0" max="120" required>
